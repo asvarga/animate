@@ -23,27 +23,17 @@ class Lerp {
 		this.done = false;
 	}
 	at_(t) {
-		var ret;
 		var progress = this.frame.progress(t);
 		if (progress <= 0) { 
-			ret = at(this.v0, t);
+			return at(this.v0, t);
 		} else if (progress >= 1) { 
-			this.done = MONOTONIC;
-			ret = at(this.v1, t);
+			// this.done = MONOTONIC;
+			return at(this.v1, t);
 		} else {
 			var v0 = at(this.v0, t);
 			var v1 = at(this.v1, t);
-			ret = v0 + (v1-v0)*progress;
+			return v0 + (v1-v0)*progress;
 		}
-		// if (MONOTONIC) {
-		// 	if (isLerp(this.v0) && this.v0.target.done) { 
-		// 		// console.log("hey!");
-		// 		this.v0 = this.v0.target.v1; }
-		// 	if (isLerp(this.v1) && this.v1.target.done) { 
-		// 		// console.log("hello!");
-		// 		this.v1 = this.v1.target.v1; }
-		// }
-		return ret;
 	}
 }
 function lerp(v0, v1, dt_or_frame) {
@@ -66,6 +56,19 @@ function isLerp(x) {
 function at(x, t=null) {
 	if (isLerp(x)) {
 		return x.target.at_(t || createjs.Ticker.getTime(true));
+	} else {
+		return x;
+	}
+}
+
+function prune(x, t=null) {
+	t = t || createjs.Ticker.getTime(true);
+	if (isLerp(x)) {
+		if (t >= x.target.frame.t1) { 
+			return x.target.v1;
+		} else {
+			return lerp(prune(x.target.v0, t), prune(x.target.v1, t), x.target.frame);
+		}
 	} else {
 		return x;
 	}

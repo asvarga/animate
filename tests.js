@@ -77,6 +77,17 @@ console.log(f.progress(23));
 			// 	return lerp(gotten0, gotten1, target.frame);
 			// }
 
+	// var f = new Frame(null, 1000, 4000);
+	// var g = new Frame(null, 2000, 5000);
+	// var h = new Frame(null, 3000, 6000);
+	// var A = new Point(200, 200);
+	// var B = new Point(800, 200);
+	// var C = new Point(800, 800);
+	// var D = new Point(200, 800);
+	// L = lerp(A, C, f);
+	// L = lerp(A, lerp(B, lerp(C, D, h), g), f);
+	// L = lerp(200, lerp(800, 200, f), f);
+
 
 
 
