@@ -62,6 +62,22 @@ console.log(f.progress(3));
 console.log(f.progress(13));
 console.log(f.progress(23));
 
+//
+
+			// var gotten0 = target.v0[name];		// might want to defer this?
+			// var gotten1 = target.v1[name];
+
+			// // CAN GREATLY SIMPLIFY THIS BY ALSO TRAPPING APPLICATION
+			// if (typeof gotten0 === "function") {
+			// 	return function() {
+			// 		return lerp(gotten0.apply(target.v0, arguments), 
+			// 					gotten1.apply(target.v1, arguments), target.frame);
+			// 	}
+			// } else {
+			// 	return lerp(gotten0, gotten1, target.frame);
+			// }
+
+
 
 
 

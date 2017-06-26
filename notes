@@ -1,0 +1,32 @@
+
+
+
+
+
+ax^3 + bx^2 + cx
+3ax^2 + 2bx + c
+
+a + b = 1
+3a + 2b = 0
+
+a = -2
+b = 3
+
+
+
+
+ax^5 + bx^4 + cx^3 + dx^2 + ex + f
+5ax^4 + 4bx^3 + 3cx^2 + 2dx + e
+20ax^3 + 12bx^2 + 6cx + 2d
+
+e = f = 0
+a + b + c + d = 1
+5a + 4b + 3c + 2d = 0
+
+
+d = e = f = 0
+a + b + c = 1
+5a + 4b + 3c = 0
+20a + 12b + 6c = 0
+
+
