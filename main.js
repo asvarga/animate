@@ -2,29 +2,55 @@
 function load() {
 	canvas = document.getElementById("myCanvas");
 	stage = new createjs.Stage("myCanvas");
+	stage.enableMouseOver();
 	createjs.Ticker.setFPS(60);
 	createjs.Ticker.addEventListener("tick", tick);
 	resize();
-	
-	circle = new createjs.Shape();
-	circle.graphics.beginFill("DeepSkyBlue").drawCircle(0, 0, 50);
-	stage.addChild(circle);
 
-	// var L1 = new Point(200, 200);
-	// var L2 = new Point(500, 800);
-	// D = new Dual(L1, L2);
-	// circle.x = D.bind(_.x);
-	// circle.y = D.bind(_.y);
+	// stage.on("stagemousedown", function(evt) {
+	// 	for (var i=0; i<circles.length; i++) {
+	// 		var circle = circles[i];
+	// 	    circle.x = dual(circle.x, evt.stageX, circle.d);
+	// 	    circle.y = dual(circle.y, evt.stageY, circle.d);
+	// 	}
+	// });
 
-	circle.x = 200;
-	circle.y = 200;
-	stage.on("stagemousedown", function(evt) {
-	    circle.x = dual(circle.x, evt.stageX);
-	    circle.y = dual(circle.y, evt.stageY);
+	circles = [];
+	for (var i=1000; i<=2000; i+=100) {
+		addCircle(i);
+	}
+	// addCircle(1000);
+
+	MOUSE = new Point(500, 500);
+	stage.on("stagemousemove", function(evt) {
+		MOUSE.x = evt.stageX;
+		MOUSE.y = evt.stageY;
 	});
+
+	this.document.onkeydown = function(evt) {
+		// console.log(event.keyCode);
+		switch(event.keyCode) {
+			case 80:	
+				createjs.Ticker.paused = !createjs.Ticker.paused;
+				break;
+		}
+	};
+	
 
 	tick();
 }
+
+function addCircle(d) {
+	var circle = new createjs.Shape();
+	circle.graphics.beginFill("DeepSkyBlue").drawCircle(0, 0, 20);
+	circle.x = 500;
+	circle.y = 500;
+	circle.d = d;
+
+	stage.addChild(circle);
+	circles.push(circle);
+} 
+
 function resize() {
 	var w = window.innerWidth;
 	var h = window.innerHeight;
@@ -36,11 +62,15 @@ function resize() {
 	canvas.style.height = s+"px";
 }
 
-function tick() {
-	// console.log(fr+0, fr);
-	// circle.x = at(L.x);
-	// circle.y = at(L.y);
-	stage.update();
+function tick(evt) {
+	if (!evt.paused) {
+		for (var i=0; i<circles.length; i++) {
+			var circle = circles[i];
+		    circle.x = dual(circle.x, MOUSE.x, circle.d);
+		    circle.y = dual(circle.y, MOUSE.y, circle.d);
+		}
+		stage.update();
+	}
 }
 
 

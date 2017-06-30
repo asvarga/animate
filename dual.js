@@ -50,7 +50,6 @@ function final(obj, x) {
 			final: x,
 			valueOf: () => {
 				if (obj.final.hasOwnProperty('final')) {
-					// obj.final = obj.final.final;
 					final(obj, obj.final.final);
 				}
 				return obj.final.valueOf();
