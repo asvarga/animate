@@ -1,5 +1,18 @@
 
 
+1. Do math with arbitrary objects by deferring the function application until numbers are found: wrapped.bind(unary function)
+2. Do lerping stuff
+
+
+
+
+
+A Lerp is a pair of elements and a function: time -> [0, 1]
+Any function applied to a Lerp gets postponed
+
+
+Are Lerps basically split pointers?
+
 
 
 
