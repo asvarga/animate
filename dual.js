@@ -12,53 +12,53 @@ class Frame {
 	valueOf() {
 		var ret = (createjs.Ticker.getTime(true)-this.t0)/this.dt;
 		if (ret >= 1) {
-			return final(this, 1);
+			return finalize(this, 1);
 		}
 		return quintic(ret);
 	}
 }
+function frame(dt, t0, t1) { return new Frame(dt, t0, t1); }
 
 class Dual {
-	constructor(v0, v1, d) {
+	constructor(v0, v1, c) {
 		this.v0 = v0;
 		this.v1 = v1;
-		this.d = d instanceof Object ? d : new Frame(d);
+		this.c = isDef(c) ? c : frame();
 	}
 	valueOf() {
-		var d = this.d.valueOf();
-		if (d >= 1) {
-			if (this.d.final) {
-				return final(this, this.v1).valueOf();
+		var c = this.c.valueOf();
+		if (c >= 1) {
+			if (this.c.final) {
+				return finalize(this, this.v1).valueOf();
 			}
 			return this.v1.valueOf();
-		} else if (d <= 0) {
+		} else if (c <= 0) {
 			return this.v0.valueOf();
 		} else {
-			return this.v0*(1-d) + this.v1*d;
+			return this.v0*(1-c) + this.v1*c;
 		}
 	}
 	bind(f) {
-		var thiss = this;
-		return new Dual({ valueOf: () => f(thiss.v0) }, { valueOf: () => f(thiss.v1) }, thiss.d);
+		return new Dual({ valueOf: () => f(this.v0) }, { valueOf: () => f(this.v1) }, this.c);
 	}
 }
-function dual(v0, v1, d) { return new Dual(v0, v1, d); }
+function dual(v0, v1, c) { return new Dual(v0, v1, c); }
 
-function final(obj, x) {
+function finalize(dis, x) {
 	if (x.hasOwnProperty('valueOf')) {
-		clear(obj, {
+		clear(dis, {
 			final: x,
 			valueOf: () => {
-				if (obj.final.hasOwnProperty('final')) {
-					final(obj, obj.final.final);
+				if (dis.final.hasOwnProperty('final')) {
+					finalize(dis, dis.final.final);
 				}
-				return obj.final.valueOf();
+				return dis.final.valueOf();
 			}
 		});
 	} else {
-		clear(obj, {
+		clear(dis, {
 			final: x,
-			valueOf: () => obj.final,
+			valueOf: () => dis.final,
 		});
 	}
 	return x;

@@ -39,8 +39,8 @@ class Dual {
 		}
 	}
 	bind(f) {
-		var dis = this;	// TODO: might be unnecessary
-		return new Dual({ valueOf: () => f(dis.v0) }, { valueOf: () => f(dis.v1) }, dis.c);
+		// var dis = this;	// TODO: might be unnecessary
+		return new Dual({ valueOf: () => f(this.v0) }, { valueOf: () => f(this.v1) }, this.c);
 	}
 }
 function dual(v0, v1, c) { return new Dual(v0, v1, c); }
