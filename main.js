@@ -7,13 +7,14 @@ function load() {
 	createjs.Ticker.addEventListener("tick", tick);
 	resize();
 
-	// stage.on("stagemousedown", function(evt) {
-	// 	for (var i=0; i<circles.length; i++) {
-	// 		var circle = circles[i];
-	// 	    circle.x = dual(circle.x, evt.stageX, circle.d);
-	// 	    circle.y = dual(circle.y, evt.stageY, circle.d);
-	// 	}
-	// });
+	stage.on("stagemousedown", function(evt) {
+		createjs.Ticker.paused = !createjs.Ticker.paused;
+		// for (var i=0; i<circles.length; i++) {
+		// 	var circle = circles[i];
+		//     circle.x = dual(circle.x, evt.stageX, circle.d);
+		//     circle.y = dual(circle.y, evt.stageY, circle.d);
+		// }
+	});
 
 	circles = [];
 	// for (var i=1000; i<=2000; i+=100) {
@@ -27,14 +28,14 @@ function load() {
 		MOUSE.y = evt.stageY;
 	});
 
-	this.document.onkeydown = function(evt) {
-		// console.log(event.keyCode);
-		switch(event.keyCode) {
-			case 80:	
-				createjs.Ticker.paused = !createjs.Ticker.paused;
-				break;
-		}
-	};
+	// this.document.onkeydown = function(evt) {
+	// 	// console.log(event.keyCode);
+	// 	switch(event.keyCode) {
+	// 		case 80:	
+	// 			createjs.Ticker.paused = !createjs.Ticker.paused;
+	// 			break;
+	// 	}
+	// };
 	
 
 	tick();
