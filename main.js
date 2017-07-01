@@ -16,10 +16,10 @@ function load() {
 	// });
 
 	circles = [];
-	for (var i=1000; i<=2000; i+=100) {
-		addCircle(i);
-	}
-	// addCircle(1000);
+	// for (var i=1000; i<=2000; i+=100) {
+	// 	addCircle(i);
+	// }
+	addCircle(1000);
 
 	MOUSE = new Point(500, 500);
 	stage.on("stagemousemove", function(evt) {
@@ -41,7 +41,7 @@ function load() {
 }
 
 function addCircle(d) {
-	var circle = new createjs.Shape();
+	circle = new createjs.Shape();
 	circle.graphics.beginFill("DeepSkyBlue").drawCircle(0, 0, 20);
 	circle.x = 500;
 	circle.y = 500;
@@ -62,14 +62,15 @@ function resize() {
 	canvas.style.height = s+"px";
 }
 
-function tick(evt) {
+function tick(evt={}) {
 	if (!evt.paused) {
 		for (var i=0; i<circles.length; i++) {
 			var circle = circles[i];
-		    circle.x = dual(circle.x, MOUSE.x, circle.d);
-		    circle.y = dual(circle.y, MOUSE.y, circle.d);
+		    circle.x = dual(circle.x, MOUSE.x, frame(circle.d));
+		    circle.y = dual(circle.y, MOUSE.y, frame(circle.d));
 		}
 		stage.update();
+		// console.log(depth(circle.x));
 	}
 }
 
