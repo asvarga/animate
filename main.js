@@ -22,11 +22,11 @@ function load() {
 	// // }
 	// addCircle(1000);
 
-	// MOUSE = new Point(500, 500);
-	// stage.on("stagemousemove", function(evt) {
-	// 	MOUSE.x = evt.stageX;
-	// 	MOUSE.y = evt.stageY;
-	// });
+	MOUSE = new Point(500, 500);
+	stage.on("stagemousemove", function(evt) {
+		MOUSE.x = evt.stageX;
+		MOUSE.y = evt.stageY;
+	});
 
 	// this.document.onkeydown = function(evt) {
 	// 	// console.log(event.keyCode);
@@ -42,9 +42,11 @@ function load() {
 	// var prog = IF(APP(quint, TIME), 800, 200);
 	// prog = APP(add, 4, 5);
 	// prog = APP(mul, prog, prog);
-	circle.x = IF(APP(quint, FRAME()), 800, 200);
+	circle.x = 500;//IF(APP(quint, FRAME()), 800, 200);
+	// circle.y = IF(FRAME(), 800, 200);
+	circle.y = 500;//IF(APP(cubic, FRAME()), 800, 200);
 	// circle.x = 500;
-	circle.y = 500;
+	// circle.y = 500;
 
 	stage.addChild(circle);
 	
@@ -76,6 +78,8 @@ function resize() {
 
 function tick(evt={}) {
 	if (!evt.paused) {
+		circle.x = IF(APP(quint, FRAME()), MOUSE.x, circle.x);
+		circle.y = IF(APP(quint, FRAME()), MOUSE.y, circle.y);
 	// 	for (var i=0; i<circles.length; i++) {
 	// 		var circle = circles[i];
 	// 	    circle.x = dual(circle.x, MOUSE.x, frame(circle.d));

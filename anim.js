@@ -1,13 +1,5 @@
 
 
-/*
-
-TODO:
-- make val a symbol
-- make everything a node
-- automatically call valueOf() because everything's a node
-
-*/
 
 class Node {}
 
@@ -30,6 +22,10 @@ function App() {
 			if (this.cache.t != t) {
 				// console.log(this.f);
 				this.cache = { t: t, val: this.f.apply(null, this.args) };
+				if (this.args.every(x => x instanceof Node && x.hasOwnProperty('val'))) {
+					clear(this, Val(this.cache.val));
+					return this.val;
+				}
 			}
 			return this.cache.val;
 		}
@@ -39,8 +35,8 @@ function APP() { return clear(new Node(), App.apply(null, arguments)); }
 
 function Frame(dt=1500, t0, t1) {
 	t0 = t0 || createjs.Ticker.getTime(true);
-	t1 = t1 || this.t0 + dt;
-	dt = dt || this.t1 - this.t0;
+	t1 = t1 || t0 + dt;
+	dt = dt || t1 - t0;
 	return {
 		t0: t0, t1: t1, dt: dt,
 		valueOf: function() { 
@@ -60,7 +56,10 @@ function If(cond, conseq, altern) {
 		cond: cond, conseq: conseq, altern: altern,
 		valueOf: function() { 
 			var c = cond.valueOf();
-			if (c >= 1) { return this.conseq; }
+			if (c >= 1) { 
+				clear(this, Val(this.conseq));
+				return this.val; 
+			}
 			if (c <= 0) { return this.altern; }
 			return c*this.conseq + (1-c)*this.altern;
 		}
@@ -81,22 +80,9 @@ eq		= (x,y) => x==y;
 
 ////////
 
-
-// // var prog = _APP(_FUNC('f', ['x'], _APP(mul, _VAR('x'), _VAR('x'))), _APP(add, 4, 5));
-// var prog = IF(1, APP(add, 4, 5), 123);
-
-// // var prog = IF(APP(mul, APP(time), 0.001), 800, 200);
-// // console.log(JSON.stringify(prog));
-// console.log(prog);
-// console.log(pruneRun(prog));
-// console.log(prog);
-
-
 // prog = APP(add, 4, 5);
 // prog2 = APP(mul, prog, prog);
 // console.log(prog2+0);
-
-
 
 
 
