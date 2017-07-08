@@ -15,15 +15,20 @@ function isObj(x) { return x !== null && typeof x === 'object'; }
 function isDef(x) { return typeof x !== 'undefined'; }
 function isNum(x) { return !isNaN(parseFloat(x)) && isFinite(x); }
 
-function clear(obj, obj2={}) {
+function clear(obj, obj2) {
 	for (var key in obj) {
 		if (obj.hasOwnProperty(key)) {
 			delete obj[key];
 		}
 	}
+	// if (typeof obj2 === "object") {
 	for (var key in obj2) {
 		if (obj2.hasOwnProperty(key)) {
 			obj[key] = obj2[key];
 		}
 	}
+	// } else if (typeof obj2 !== "undefined") {
+	// 	obj.valueOf = () => obj2;
+	// }
+	return obj;
 }

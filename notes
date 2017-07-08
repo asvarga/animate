@@ -70,7 +70,9 @@ CREATE WHOLE INTERPRETED LANGUAGE THAT SELF PRUNES AS IT RUNS
 
 
 
-
+- Simplify the language
+	- no functions!
+	- functions just behave like macros?
 
 
 

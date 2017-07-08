@@ -39,10 +39,10 @@ function load() {
 
 	circle = new createjs.Shape();
 	circle.graphics.beginFill("DeepSkyBlue").drawCircle(0, 0, 20);
-	var prog = IF(APP(quint, APP(mul, APP(time), 0.001)), 800, 200);
-	circle.x = {
-		valueOf: () => interp(prog)
-	};
+	// var prog = IF(APP(quint, TIME), 800, 200);
+	// prog = APP(add, 4, 5);
+	// prog = APP(mul, prog, prog);
+	circle.x = IF(APP(quint, FRAME()), 800, 200);
 	// circle.x = 500;
 	circle.y = 500;
 
