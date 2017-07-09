@@ -28,7 +28,7 @@ function App() {
 		valueOf: function() { 
 			var t = time();
 			if (this.cache.t != t) {
-				// console.log(this.f);
+				// console.log("work:", this);
 				this.cache = { t: t, val: this.f.apply(null, this.args.map(x => x.valueOf())) };
 				if (this.pure && this.args.every(x => x instanceof Node && x.hasOwnProperty('val'))) {
 					clear(this, Val(this.cache.val));
@@ -73,20 +73,30 @@ var if_handler = {
 }
 function If(cond, conseq, altern) { 
 	return {
+		cache: {t: null, val: null}, 
 		cond: cond, conseq: conseq, altern: altern,
 		valueOf: function() { 
-			var c = cond.valueOf();
-			if (c >= 1) { 
-				clear(this, Val(this.conseq));
-				return this.val; 
+			var t = time();
+			if (this.cache.t != t) {
+				var c = cond.valueOf();
+				if (c >= 1) { 
+					clear(this, Val(this.conseq));
+					return this.val; 
+				}
+				if (c <= 0) { 
+					this.cache = { t: t, val: this.altern.valueOf() };
+					return this.cache.val;
+				}
+				var con = this.conseq.valueOf();
+				var alt = this.altern.valueOf();
+				if (isNum(con) && isNum(alt)) { 
+					// console.log("work:", this);
+					this.cache = { t: t, val: c*con + (1-c)*alt };
+					return this.cache.val;
+				}
+				return new Proxy(this, if_handler);
 			}
-			if (c <= 0) { return this.altern; }
-			var con = this.conseq.valueOf();
-			var alt = this.altern.valueOf();
-			if (isNum(con) && isNum(alt)) { 
-				return c*con + (1-c)*alt; 
-			}
-			return new Proxy(this, if_handler);
+			return this.cache.val;
 		}
 	}
 }
@@ -108,7 +118,8 @@ eq		= (x,y) => x==y;
 
 ////////
 
-// prog = APP(add, 4, 5);
+// prog = IF(0.5, 4, 5);
+// // prog = APP(add, 4, 5);
 // prog2 = APP(mul, prog, prog);
 // console.log(prog2+0);
 
