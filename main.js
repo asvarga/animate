@@ -7,20 +7,18 @@ function load() {
 	createjs.Ticker.addEventListener("tick", tick);
 	resize();
 
+	modes = [id, cubic, quint];
+	modeNames = ['linear', 'cubic', 'quint'];
+	ind = -1;
+	function changeMode() {
+		ind = (ind+1)%modes.length;
+		alertify.success("Mode: "+modeNames[ind]);
+	}
+	changeMode();
+
 	stage.on("stagemousedown", function(evt) {
 		createjs.Ticker.paused = !createjs.Ticker.paused;
-		// for (var i=0; i<circles.length; i++) {
-		// 	var circle = circles[i];
-		//     circle.x = dual(circle.x, evt.stageX, circle.d);
-		//     circle.y = dual(circle.y, evt.stageY, circle.d);
-		// }
 	});
-
-	// circles = [];
-	// // for (var i=1000; i<=2000; i+=100) {
-	// // 	addCircle(i);
-	// // }
-	// addCircle(1000);
 
 	MOUSE = new Point(500, 500);
 	stage.on("stagemousemove", function(evt) {
@@ -28,42 +26,43 @@ function load() {
 		MOUSE.y = evt.stageY;
 	});
 
-	// this.document.onkeydown = function(evt) {
-	// 	// console.log(event.keyCode);
-	// 	switch(event.keyCode) {
-	// 		case 80:	
-	// 			createjs.Ticker.paused = !createjs.Ticker.paused;
-	// 			break;
-	// 	}
-	// };
+	this.document.onkeydown = function(evt) {
+		// console.log(event.keyCode);
+		switch(event.keyCode) {
+			// case 80: 	// p	
+			// 	createjs.Ticker.paused = !createjs.Ticker.paused;
+			// 	break;
+			case 77: 	// m	
+				changeMode();
+				break;
+		}
+	};
 
 	circle = new createjs.Shape();
 	circle.graphics.beginFill("DeepSkyBlue").drawCircle(0, 0, 20);
-	// var prog = IF(APP(quint, TIME), 800, 200);
-	// prog = APP(add, 4, 5);
-	// prog = APP(mul, prog, prog);
-	circle.x = 500;//IF(APP(quint, FRAME()), 800, 200);
-	// circle.y = IF(FRAME(), 800, 200);
-	circle.y = 500;//IF(APP(cubic, FRAME()), 800, 200);
-	// circle.x = 500;
-	// circle.y = 500;
-
 	stage.addChild(circle);
-	
+	circle.x = 500;
+	circle.y = 500;
+
+	// var n = 3;
+	// for (var i=0; i<n; i++) {
+	// 	var circle2 = new createjs.Shape();
+	// 	circle2.graphics.beginFill("Red").drawCircle(0, 0, 20);
+	// 	stage.addChild(circle2);
+	// 	circle2.x = {
+	// 		i: i,
+	// 		valueOf: function() { return 40*Math.cos(TIME/100+2*Math.PI/n*this.i)+circle.x; }
+	// 	};
+	// 	circle2.y = {
+	// 		i: i,
+	// 		valueOf: function() { return 40*Math.sin(TIME/100+2*Math.PI/n*this.i)+circle.y; }
+	// 	}
+	// }
 
 	tick();
 }
 
-// function addCircle(d) {
-// 	circle = new createjs.Shape();
-// 	circle.graphics.beginFill("DeepSkyBlue").drawCircle(0, 0, 20);
-// 	circle.x = 500;
-// 	circle.y = 500;
-// 	circle.d = d;
 
-// 	stage.addChild(circle);
-// 	circles.push(circle);
-// } 
 
 function resize() {
 	var w = window.innerWidth;
@@ -78,15 +77,9 @@ function resize() {
 
 function tick(evt={}) {
 	if (!evt.paused) {
-		circle.x = IF(APP(quint, FRAME()), MOUSE.x, circle.x);
-		circle.y = IF(APP(quint, FRAME()), MOUSE.y, circle.y);
-	// 	for (var i=0; i<circles.length; i++) {
-	// 		var circle = circles[i];
-	// 	    circle.x = dual(circle.x, MOUSE.x, frame(circle.d));
-	// 	    circle.y = dual(circle.y, MOUSE.y, frame(circle.d));
-	// 	}
+		circle.x = IF(APP(modes[ind], FRAME()), MOUSE.x, circle.x);
+		circle.y = IF(APP(modes[ind], FRAME()), MOUSE.y, circle.y);
 		stage.update();
-	// 	// console.log(depth(circle.x));
 	}
 }
 

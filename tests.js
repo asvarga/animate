@@ -91,6 +91,17 @@ console.log(f.progress(23));
 
 
 
+a = IF(0.5, [1,1], [2,2]);
+b = APP(_[0], a);
+console.log(b+0);
+a2 = IF(0.7, [10,10], [20,20]);
+c = APP((x,y) => x[0]+y[0], a, a2);
+console.log(c+0);
+
+
+
+
+
 
 
 

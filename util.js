@@ -21,14 +21,11 @@ function clear(obj, obj2) {
 			delete obj[key];
 		}
 	}
-	// if (typeof obj2 === "object") {
 	for (var key in obj2) {
 		if (obj2.hasOwnProperty(key)) {
 			obj[key] = obj2[key];
 		}
 	}
-	// } else if (typeof obj2 !== "undefined") {
-	// 	obj.valueOf = () => obj2;
-	// }
 	return obj;
 }
+
