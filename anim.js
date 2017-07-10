@@ -1,5 +1,19 @@
 
-
+var handler = {
+	get: function(target, name, receiver) {
+		if (name === "target") { return target; }
+		if (target.hasOwnProperty('cond')) {
+			if (name === "valueOf" || name === Symbol.toPrimitive) { return target[name]; }
+			return IF(target.cond, target.conseq[name], target.altern[name]).valueOf();
+		}
+		return target[name];
+	},
+	apply: function(target, thisArg, argumentsList) {
+		return IF(	target.cond, 
+					target.conseq.apply(thisArg.conseq, argumentsList),
+					target.altern.apply(thisArg.altern, argumentsList)).valueOf();
+	}
+}
 
 class Node {
 	constructor(valueOf) {
@@ -14,7 +28,7 @@ function Val(x) {
 		valueOf: function() { return this.val; }
 	};
 }
-function VAL(x) { return x instanceof Node ? x : clear(new Node(), Val(x)); }
+function VAL(x) { return x instanceof Node ? x : new Proxy(clear(new Node(), Val(x)), handler); }
 VAL_1 = VAL(1);
 
 function App() { 
@@ -27,19 +41,19 @@ function App() {
 		f: args[0], args: args.slice(1).map(VAL),
 		valueOf: function() { 
 			var t = time();
-			if (this.cache.t != t) {
-				// console.log("work:", this);
-				this.cache = { t: t, val: this.f.apply(null, this.args.map(x => x.valueOf())) };
-				if (this.pure && this.args.every(x => x instanceof Node && x.hasOwnProperty('val'))) {
-					clear(this, Val(this.cache.val));
-					return this.val;
+			if (this.target.cache.t != t) {
+				// console.log("work:", this.target);
+				this.target.cache = { t: t, val: this.target.f.apply(null, this.target.args.map(x => x.valueOf())) };
+				if (this.target.pure && this.target.args.every(x => x instanceof Node && x.hasOwnProperty('val'))) {
+					clear(this.target, Val(this.target.cache.val));
+					return this.target.val;
 				}
 			}
-			return this.cache.val;
+			return this.target.cache.val;
 		}
 	};
 }
-function APP() { return clear(new Node(), App.apply(null, arguments)); }
+function APP() { return new Proxy(clear(new Node(), App.apply(null, arguments)), handler); }
 
 function Frame(dt=1500, t0, t1) {
 	t0 = t0 || createjs.Ticker.getTime(true);
@@ -49,30 +63,16 @@ function Frame(dt=1500, t0, t1) {
 		t0: t0, t1: t1, dt: dt,
 		valueOf: function() { 
 			var t = time();
-			if (t > this.t1) {
-				clear(this, VAL_1);
+			if (t > this.target.t1) {
+				clear(this.target, VAL_1);
 				return 1;
 			}
-			return Math.max(0, (t-this.t0)/this.dt); 
+			return Math.max(0, (t-this.target.t0)/this.target.dt); 
 		}
 	}
 }
-function FRAME() { return clear(new Node(), Frame.apply(null, arguments)); }
+function FRAME() { return new Proxy(clear(new Node(), Frame.apply(null, arguments)), handler); }
 
-
-var if_handler = {
-	get: function(target, name, receiver) {
-		if (name === "target") { return target; }
-		if (name === "valueOf" || name === Symbol.toPrimitive) { return target[name]; }
-		// if (!target.conseq) { console.log(name); }
-		return IF(target.cond, target.conseq[name], target.altern[name]).valueOf();
-	},
-	apply: function(target, thisArg, argumentsList) {
-		return IF(	target.cond, 
-					target.conseq.apply(thisArg.conseq, argumentsList),
-					target.altern.apply(thisArg.altern, argumentsList)).valueOf();
-	}
-}
 function If(cond, conseq, altern) { 
 	// var ret =
 	return {
@@ -82,19 +82,12 @@ function If(cond, conseq, altern) {
 			// console.log(this.target);
 			var t = time();
 			if (this.target.cache.t != t) {
-				var c = cond.valueOf();
+				var c = this.target.cond.valueOf();
 				if (c >= 1) { 
-					var newThis = Val(this.target.conseq);
-					if (newThis.hasOwnProperty('cond')) {
-						clear(this.target, newThis);
-					} else {
-						clear(this, newThis);
-					}
-					// clear(this.target, Val(this.target.conseq));
-					// console.log(this.target.cond);
-					createjs.Ticker.paused = true;
-					// return this.target.val; 
-					return newThis.valueOf();
+					// console.log(this.target.conseq);
+					clear(this.target, Val(this.target.conseq));
+					// createjs.Ticker.paused = true;
+					return this.target.valueOf();
 				}
 				if (c <= 0) { 
 					this.target.cache = { t: t, val: this.target.altern.valueOf() };
@@ -108,7 +101,7 @@ function If(cond, conseq, altern) {
 					return this.target.cache.val;
 				}
 				return this;
-				// return new Proxy(this.target, if_handler);
+				// return new Proxy(this.target, handler);
 			}
 			return this.target.cache.val;
 		}
@@ -116,12 +109,7 @@ function If(cond, conseq, altern) {
 	// ret.target = ret;
 	// return ret;
 }
-function IF() { 
-	var inner = clear(new Node(), If.apply(null, arguments));
-	var proxy = new Proxy(inner, if_handler); 
-	// var outer = new Node(() => proxy)
-	return proxy;
-}
+function IF() { return new Proxy(clear(new Node(), If.apply(null, arguments)), handler); }
 
 
 
