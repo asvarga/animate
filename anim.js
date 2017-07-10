@@ -61,7 +61,7 @@ function FRAME() { return clear(new Node(), Frame.apply(null, arguments)); }
 
 
 var if_handler = {
-	get: function(target, name) {
+	get: function(target, name, receiver) {
 		if (name === "target") { return target; }
 		if (name === "valueOf" || name === Symbol.toPrimitive) { return target[name]; }
 		// if (!target.conseq) { console.log(name); }
@@ -84,14 +84,17 @@ function If(cond, conseq, altern) {
 			if (this.target.cache.t != t) {
 				var c = cond.valueOf();
 				if (c >= 1) { 
-					clear(this.target, Val(this.target.conseq));
-					console.log(this.target.cond);
-					createjs.Ticker.paused = true;
-					if (!this.target.cond) { 
-						console.log(this);
-						this.handler = {}; 
+					var newThis = Val(this.target.conseq);
+					if (newThis.hasOwnProperty('cond')) {
+						clear(this.target, newThis);
+					} else {
+						clear(this, newThis);
 					}
-					return this.target.val; 
+					// clear(this.target, Val(this.target.conseq));
+					// console.log(this.target.cond);
+					createjs.Ticker.paused = true;
+					// return this.target.val; 
+					return newThis.valueOf();
 				}
 				if (c <= 0) { 
 					this.target.cache = { t: t, val: this.target.altern.valueOf() };
@@ -113,7 +116,12 @@ function If(cond, conseq, altern) {
 	// ret.target = ret;
 	// return ret;
 }
-function IF() { return new Proxy(clear(new Node(), If.apply(null, arguments)), if_handler); }
+function IF() { 
+	var inner = clear(new Node(), If.apply(null, arguments));
+	var proxy = new Proxy(inner, if_handler); 
+	// var outer = new Node(() => proxy)
+	return proxy;
+}
 
 
 
