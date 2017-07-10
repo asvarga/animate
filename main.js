@@ -7,6 +7,12 @@ function load() {
 	createjs.Ticker.addEventListener("tick", tick);
 	resize();
 
+	MOUSE = new Point(500, 500);
+	stage.on("stagemousemove", function(evt) {
+		MOUSE.x = evt.stageX;
+		MOUSE.y = evt.stageY;
+	});
+
 	modes = [id, cubic, quint];
 	modeNames = ['linear', 'cubic', 'quint'];
 	ind = -1;
@@ -18,12 +24,6 @@ function load() {
 
 	stage.on("stagemousedown", function(evt) {
 		createjs.Ticker.paused = !createjs.Ticker.paused;
-	});
-
-	MOUSE = new Point(500, 500);
-	stage.on("stagemousemove", function(evt) {
-		MOUSE.x = evt.stageX;
-		MOUSE.y = evt.stageY;
 	});
 
 	this.document.onkeydown = function(evt) {
@@ -44,20 +44,6 @@ function load() {
 	circle.x = 500;
 	circle.y = 500;
 
-	// var n = 3;
-	// for (var i=0; i<n; i++) {
-	// 	var circle2 = new createjs.Shape();
-	// 	circle2.graphics.beginFill("Red").drawCircle(0, 0, 20);
-	// 	stage.addChild(circle2);
-	// 	circle2.x = {
-	// 		i: i,
-	// 		valueOf: function() { return 40*Math.cos(TIME/100+2*Math.PI/n*this.i)+circle.x; }
-	// 	};
-	// 	circle2.y = {
-	// 		i: i,
-	// 		valueOf: function() { return 40*Math.sin(TIME/100+2*Math.PI/n*this.i)+circle.y; }
-	// 	}
-	// }
 
 	tick();
 }

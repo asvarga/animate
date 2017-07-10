@@ -63,6 +63,8 @@ function FRAME() { return clear(new Node(), Frame.apply(null, arguments)); }
 var if_handler = {
 	get: function(target, name) {
 		if (name === "target") { return target; }
+		if (name === "valueOf" || name === Symbol.toPrimitive) { return target[name]; }
+		// if (!target.conseq) { console.log(name); }
 		return IF(target.cond, target.conseq[name], target.altern[name]).valueOf();
 	},
 	apply: function(target, thisArg, argumentsList) {
@@ -72,35 +74,46 @@ var if_handler = {
 	}
 }
 function If(cond, conseq, altern) { 
+	// var ret =
 	return {
 		cache: {t: null, val: null}, 
 		cond: cond, conseq: conseq, altern: altern,
 		valueOf: function() { 
+			// console.log(this.target);
 			var t = time();
-			if (this.cache.t != t) {
+			if (this.target.cache.t != t) {
 				var c = cond.valueOf();
 				if (c >= 1) { 
-					clear(this, Val(this.conseq));
-					return this.val; 
+					clear(this.target, Val(this.target.conseq));
+					console.log(this.target.cond);
+					createjs.Ticker.paused = true;
+					if (!this.target.cond) { 
+						console.log(this);
+						this.handler = {}; 
+					}
+					return this.target.val; 
 				}
 				if (c <= 0) { 
-					this.cache = { t: t, val: this.altern.valueOf() };
-					return this.cache.val;
+					this.target.cache = { t: t, val: this.target.altern.valueOf() };
+					return this.target.cache.val;
 				}
-				var con = this.conseq.valueOf();
-				var alt = this.altern.valueOf();
+				var con = this.target.conseq.valueOf();
+				var alt = this.target.altern.valueOf();
 				if (isNum(con) && isNum(alt)) { 
-					// console.log("work:", this);
-					this.cache = { t: t, val: c*con + (1-c)*alt };
-					return this.cache.val;
+					// console.log("work:", this.target);
+					this.target.cache = { t: t, val: c*con + (1-c)*alt };
+					return this.target.cache.val;
 				}
-				return new Proxy(this, if_handler);
+				return this;
+				// return new Proxy(this.target, if_handler);
 			}
-			return this.cache.val;
+			return this.target.cache.val;
 		}
 	}
+	// ret.target = ret;
+	// return ret;
 }
-function IF() { return clear(new Node(), If.apply(null, arguments)); }
+function IF() { return new Proxy(clear(new Node(), If.apply(null, arguments)), if_handler); }
 
 
 

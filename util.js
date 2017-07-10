@@ -29,3 +29,6 @@ function clear(obj, obj2) {
 	return obj;
 }
 
+function randColor() {
+	return '#'+(Math.random()*0xFFFFFF<<0).toString(16);
+}
