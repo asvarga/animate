@@ -9,14 +9,18 @@ var handler = {
 		return target[name];
 	},
 	apply: function(target, thisArg, argumentsList) {
-		return IF(	target.cond, 
-					target.conseq.apply(thisArg.conseq, argumentsList),
-					target.altern.apply(thisArg.altern, argumentsList)).valueOf();
+		if (target.hasOwnProperty('cond')) {
+			return IF(	target.cond, 
+						target.conseq.apply(thisArg, argumentsList),
+						target.altern.apply(thisArg, argumentsList)).valueOf();
+		}
+		return target.apply(thisArg, argumentsList);
 	}
 }
 
-class Node {
+class Node extends Function {
 	constructor(valueOf) {
+		super();
 		this.valueOf = valueOf;
 	}
 }
@@ -92,6 +96,9 @@ function If(cond, conseq, altern) {
 				if (c <= 0) { 
 					this.target.cache = { t: t, val: this.target.altern.valueOf() };
 					return this.target.cache.val;
+				}
+				if (!this.target.conseq) {
+					console.log(this.target);
 				}
 				var con = this.target.conseq.valueOf();
 				var alt = this.target.altern.valueOf();

@@ -30,14 +30,14 @@ function load() {
 		MOUSE.y = evt.stageY;
 	});
 
-	modes = [id, cubic, quint];
-	modeNames = ['linear', 'cubic', 'quint'];
-	ind = -1;
-	function changeMode() {
-		ind = (ind+1)%modes.length;
-		alertify.success("Mode: "+modeNames[ind]);
-	}
-	changeMode();
+	// modes = [id, cubic, quint];
+	// modeNames = ['linear', 'cubic', 'quint'];
+	// ind = -1;
+	// function changeMode() {
+	// 	ind = (ind+1)%modes.length;
+	// 	alertify.success("Mode: "+modeNames[ind]);
+	// }
+	// changeMode();
 
 	stage.on("stagemousedown", function(evt) {
 		// createjs.Ticker.paused = !createjs.Ticker.paused;
@@ -77,12 +77,9 @@ class Circle extends createjs.Shape {
 		this.childs = childs || [];
 		var thiss = this;
 		this.space = par ? NODE(function() {
-			if (thiss.par.childs && thiss.par.childs.indexOf) {
-				return thiss.par.space/2**(1+thiss.par.childs.indexOf(thiss));
-			} else {
-				console.log(thiss.par.childs);
-				return 100;
-			}
+			// console.log(thiss.par.childs.indexOf);
+			// NOTE: I think somewhere valueOf() isn't being called enough
+			return thiss.par.space/2**(1+thiss.par.childs.indexOf(thiss));
 		}) : 800;
 		this.x = NODE(() => this.par.x+this.par.space-2*this.space);
 		this.y = NODE(() => this.par.y+100);
