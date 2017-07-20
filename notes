@@ -50,9 +50,6 @@ a + b + c = 1
 
 
 
-
-
-
 CREATE WHOLE INTERPRETED LANGUAGE THAT SELF PRUNES AS IT RUNS
 - HAVE SEVERAL FORMS
 - INCLUDING A GETTIME FORM
@@ -72,7 +69,27 @@ CREATE WHOLE INTERPRETED LANGUAGE THAT SELF PRUNES AS IT RUNS
 
 - Simplify the language
 	- no functions!
-	- functions just behave like macros?
+	- functions just behave like ma
+
+
+
+
+
+
+
+
+- do all:
+	- fix clear
+		- "obj.constructor = obj2.constuctor"
+	- use actual classes
+	- use less sketchy type-checking
+		- "switch(obj.constructor.name)"
+- do all:
+	- make Nothing
+	- use Nothing
+
+
+
 
 
 
