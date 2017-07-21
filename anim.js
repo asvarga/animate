@@ -1,38 +1,66 @@
 
 var handler = {
 	get: function(target, name, receiver) {
+		// console.log(name);
 		if (name === "target") { return target; }
-		if (target.hasOwnProperty('cond')) {
-			if (name === "valueOf" || name === Symbol.toPrimitive) { return target[name]; }
-			return IF(target.cond, target.conseq[name], target.altern[name]).valueOf();
+		if (name === "valueOf" || name === Symbol.toPrimitive || name === "toString") { return target[name]; }
+		if (target.type === "If") {
+			return IF(	target.cond, 
+						maybe(target.conseq[name]),
+						maybe(target.altern[name]) 	).valueOf();
 		}
-		return target[name];
+		if (target.type === "Nothing") { return NOTHING; }
+		return maybe(target[name]);
 	},
 	apply: function(target, thisArg, argumentsList) {
-		if (target.hasOwnProperty('cond')) {
+		if (target.type === "If") {
+			// console.log(target.conseq);
 			return IF(	target.cond, 
 						target.conseq.apply(thisArg, argumentsList),
-						target.altern.apply(thisArg, argumentsList)).valueOf();
+						target.altern.apply(thisArg, argumentsList) ).valueOf();
 		}
+		if (target.type === "Nothing") { return NOTHING; }
 		return target.apply(thisArg, argumentsList);
 	}
+}
+
+function destiny(x) {
+	if (not(x)) { return x; }
+	var target = x.target;
+	if (!not(target) && target.type === "If") { return destiny(target.conseq); }
+	return x.valueOf();
+}
+
+function lift(x) {
+	if (x.type) { return x; }
+	if (not(x)) { return NOTHING; }
+	return VAL(x);
+}
+function maybe(x) {
+	return not(x) ? NOTHING : x;
 }
 
 class Node extends Function {
 	constructor(valueOf) {
 		super();
 		this.valueOf = valueOf;
+		this.type = "Node";
 	}
 }
 function NODE(f) { return new Node(f); }
 
+_NOTHING = new Node(()=>0);
+_NOTHING.type = "Nothing";
+NOTHING = new Proxy(_NOTHING, handler);
+
 function Val(x) { 
 	return { 
 		val: x, 
-		valueOf: function() { return this.val; }
+		valueOf: function() { return this.val; },
+		type: "Val"
 	};
 }
-function VAL(x) { return x instanceof Node ? x : new Proxy(clear(new Node(), Val(x)), handler); }
+function VAL(x) { return new Proxy(Val(x), handler); }
 VAL_1 = VAL(1);
 
 function App() { 
@@ -42,22 +70,23 @@ function App() {
 	return { 
 		cache: {t: null, val: null}, 
 		pure: pure,
-		f: args[0], args: args.slice(1).map(VAL),
+		f: args[0], args: args.slice(1).map(lift),
 		valueOf: function() { 
 			var t = time();
 			if (this.target.cache.t != t) {
 				// console.log("work:", this.target);
 				this.target.cache = { t: t, val: this.target.f.apply(null, this.target.args.map(x => x.valueOf())) };
-				if (this.target.pure && this.target.args.every(x => x instanceof Node && x.hasOwnProperty('val'))) {
+				if (this.target.pure && this.target.args.every(x => x.type === 'Val')) {
 					clear(this.target, Val(this.target.cache.val));
 					return this.target.val;
 				}
 			}
 			return this.target.cache.val;
-		}
+		},
+		type: "App"
 	};
 }
-function APP() { return new Proxy(clear(new Node(), App.apply(null, arguments)), handler); }
+function APP() { return new Proxy(App.apply(null, arguments), handler); }
 
 function Frame(dt=1500, t0, t1) {
 	t0 = t0 || createjs.Ticker.getTime(true);
@@ -72,10 +101,11 @@ function Frame(dt=1500, t0, t1) {
 				return 1;
 			}
 			return Math.max(0, (t-this.target.t0)/this.target.dt); 
-		}
+		},
+		type: "Frame"
 	}
 }
-function FRAME() { return new Proxy(clear(new Node(), Frame.apply(null, arguments)), handler); }
+function FRAME() { return new Proxy(Frame.apply(null, arguments), handler); }
 
 function If(cond, conseq, altern) { 
 	// var ret =
@@ -97,9 +127,9 @@ function If(cond, conseq, altern) {
 					this.target.cache = { t: t, val: this.target.altern.valueOf() };
 					return this.target.cache.val;
 				}
-				if (!this.target.conseq) {
-					console.log(this.target);
-				}
+				// if (!this.target.conseq) {
+				// 	console.log(this.target.valueOf());
+				// }
 				var con = this.target.conseq.valueOf();
 				var alt = this.target.altern.valueOf();
 				if (isNum(con) && isNum(alt)) { 
@@ -111,12 +141,13 @@ function If(cond, conseq, altern) {
 				// return new Proxy(this.target, handler);
 			}
 			return this.target.cache.val;
-		}
+		},
+		type: "If"
 	}
 	// ret.target = ret;
 	// return ret;
 }
-function IF() { return new Proxy(clear(new Node(), If.apply(null, arguments)), handler); }
+function IF() { return new Proxy(If.apply(null, arguments), handler); }
 
 
 

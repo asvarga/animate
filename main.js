@@ -44,7 +44,7 @@ function load() {
 	circle.x = 500;
 	circle.y = 500;
 
-
+	// createjs.Ticker.paused = true;
 	tick();
 }
 

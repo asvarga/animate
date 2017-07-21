@@ -32,3 +32,7 @@ function clear(obj, obj2) {
 function randColor() {
 	return '#'+(Math.random()*0xFFFFFF<<0).toString(16);
 }
+
+function not(x) {
+	return x === null || x === undefined;
+}

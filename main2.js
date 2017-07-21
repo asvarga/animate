@@ -1,4 +1,6 @@
 
+CHOSEN = null;
+
 function resize() {
 	var w = window.innerWidth;
 	var h = window.innerHeight;
@@ -65,42 +67,64 @@ function load() {
 	circle.y = 100;
 	circle.space = 800;
 
-
 	tick();
 }
 
 class Circle extends createjs.Shape {
-	constructor(par, childs) {
+	constructor(par=NOTHING, childs, index) {
 		super();
 		this.graphics.beginFill(randColor()).drawCircle(0, 0, 20);
 		this.par = par;
 		this.childs = childs || [];
-		var thiss = this;
-		this.space = par ? NODE(function() {
-			// console.log(thiss.par.childs.indexOf);
-			// NOTE: I think somewhere valueOf() isn't being called enough
-			return thiss.par.space/2**(1+thiss.par.childs.indexOf(thiss));
-		}) : 800;
+		// var thiss = this;
+		this.index = index || 0;
+		this.space = par ? NODE(()=>this.par.space/2**(1+this.index)) : VAL(800);
 		this.x = NODE(() => this.par.x+this.par.space-2*this.space);
 		this.y = NODE(() => this.par.y+100);
 		this.on("click", function(evt) {
+			var par = destiny(this.par);
+			var sibs = destiny(par.childs);
+			var ind = destiny(this.index);
+			var childs = destiny(this.childs);
+
 			if (DOWN[18]) {		// alt
-				if (this.par) {
-					var par = this.par;
-					var sibs = par.childs;
-					var ind = sibs.indexOf(this);
-					par.childs = LERP([].concat(sibs.slice(0, ind), this.childs, sibs.slice(ind+1)), sibs);
-					for (var i=0; i<this.childs.length; i++) {
-						this.childs[i].par = LERP(par, this);
+				if (par) {
+					var newSibs = [].concat(sibs.slice(0, ind), 
+											childs, 
+											sibs.slice(ind+1));
+					par.childs = LERP(newSibs, par.childs);
+					for (var i=0; i<childs.length; i++) {
+						childs[i].par = LERP(par, childs[i].par);
 					}
-					// stage.removeChild(this);
+					for (var i=0; i<newSibs.length; i++) {
+						newSibs[i].index = LERP(i, newSibs[i].index);
+					}
+					// this.alpha = 0;
+					stage.removeChild(this);
 				}
+			} else if (DOWN[16]) {		// shift
+				choose(this);
 			} else {
-				this.childs.push(new Circle(this));
+				childs.push(new Circle(this, [], childs.length));
 			}
 		});
 		stage.addChild(this);
 	}
+}
+function choose(x) { 
+	if (CHOSEN) {
+		CHOSEN.scaleX = LERP(1, CHOSEN.scaleX);
+		CHOSEN.scaleY = LERP(1, CHOSEN.scaleY);
+	}
+	if (CHOSEN != x) {
+		CHOSEN = x;
+		CHOSEN.scaleX = LERP(2, CHOSEN.scaleX);
+		CHOSEN.scaleY = LERP(2, CHOSEN.scaleY);
+	} else {
+		CHOSEN = null;
+	}
+	console.log(CHOSEN);
+	return CHOSEN; 
 }
 
 DUR = 1500;
@@ -108,6 +132,7 @@ function LERP(to, from) {
 	return IF(APP(quint, FRAME(DUR)), to, from);
 }
 
+function pause() { createjs.Ticker.paused = true; }
 
 
 
