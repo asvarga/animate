@@ -76,36 +76,32 @@ class Circle extends createjs.Shape {
 		this.graphics.beginFill(randColor()).drawCircle(0, 0, 20);
 		this.par = par;
 		this.childs = childs || [];
-		// var thiss = this;
 		this.index = index || 0;
-		this.space = par ? NODE(()=>this.par.space/2**(1+this.index)) : VAL(800);
+		this.space = par ? NODE(()=>this.par.space/2**(1+this.index)) : 800;
 		this.x = NODE(() => this.par.x+this.par.space-2*this.space);
 		this.y = NODE(() => this.par.y+100);
 		this.on("click", function(evt) {
 			var par = destiny(this.par);
 			var sibs = destiny(par.childs);
-			var ind = destiny(this.index);
+			var index = destiny(this.index);
 			var childs = destiny(this.childs);
 
 			if (DOWN[18]) {		// alt
 				if (par) {
-					var newSibs = [].concat(sibs.slice(0, ind), 
+					var newSibs = [].concat(sibs.slice(0, index), 
 											childs, 
-											sibs.slice(ind+1));
+											sibs.slice(index+1));
 					par.childs = LERP(newSibs, par.childs);
-					for (var i=0; i<childs.length; i++) {
-						childs[i].par = LERP(par, childs[i].par);
-					}
 					for (var i=0; i<newSibs.length; i++) {
 						newSibs[i].index = LERP(i, newSibs[i].index);
+						newSibs[i].par = LERP(par, newSibs[i].par);
 					}
-					// this.alpha = 0;
 					stage.removeChild(this);
 				}
 			} else if (DOWN[16]) {		// shift
 				choose(this);
 			} else {
-				childs.push(new Circle(this, [], childs.length));
+				childs.push(new Circle(this, [], childs.length, index));
 			}
 		});
 		stage.addChild(this);

@@ -69,7 +69,7 @@ CREATE WHOLE INTERPRETED LANGUAGE THAT SELF PRUNES AS IT RUNS
 
 - Simplify the language
 	- no functions!
-	- functions just behave like ma
+	- functions just behave like ma  (th equations?)
 
 
 
@@ -77,22 +77,36 @@ CREATE WHOLE INTERPRETED LANGUAGE THAT SELF PRUNES AS IT RUNS
 
 
 
+- object orient: put methods objects
 
-- do all:
-	- fix clear
-		- "obj.constructor = obj2.constuctor"
-	- use actual classes
-	- use less sketchy type-checking
-		- "switch(obj.constructor.name)"
-- do all:
-	- make Nothing
-	- use Nothing
+- neaten up
+- rename things and functions
+- caching for Nodes
+	- Nodes should be time-pure by definition
+- make independent of create.js or any other clock thing
+	- default to some vanilla ticker
+- avoid name conflicts (like type property)
+- neaten up switch(type) logic
+- come up with cool name (animonad, super position)
+- solve bidirectional update issue?
+- more types of things
+- APP(js, DUAL(x, y)) should *become* DUAL(APP(f, x), APP(f, y)) once and evaluate that every frame
 
 
 
 
-
-
+x consider interpreter approach again?
+	x this allows P(O(O(O))) instead of P(O(P(O(P(O))))) where P=proxy and O=object
+	x might allow quotes and variables and such
+		x interpreter could return (value, simplified subexpressions) to avoid mutating the AST in place
+	*** avoiding mutation in place simplifies the interpreter
+		x each element IS a function that returns (value, simplified self)
+			- or should these two roles be separated?
+		- interpreter still needed for variables
+		- need objects with valueOf() to treat AST elements as simple values and simplify them
+! oy dis dont work becuz applying arbitrary js to lang things is out of interpreter's control, so every lang object must be wrapped to catch every interaction with js
+	- don't bother with variables, just use simple expressions
+	- don't even need 'let' because caching do dat automatically
 
 
 

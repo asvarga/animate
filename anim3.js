@@ -8,12 +8,14 @@ var handler = {
 			case Symbol.toPrimitive:
 			case "toString":
 				return target[name];
+			case "become":
+				// function that clears target
 		}
 		switch (target.type) {
 			case "Nothing":
 				return NOTHING;
 			case "If":
-				return IF(	target.cond, 
+				return IF(	target.cond,
 							maybe(target.conseq[name]),
 							maybe(target.altern[name]) 	).valueOf();
 		}
@@ -57,15 +59,25 @@ class Node extends Function {
 }
 function NODE(f) { return new Node(f); }
 
-_NOTHING = new Node(()=>0);
-_NOTHING.type = "Nothing";
+// _NOTHING = new Node(()=>0);
+// _NOTHING.type = "Nothing";
+// NOTHING = new Proxy(_NOTHING, handler);
+
+_NOTHING = {
+	valueOf: ()=>0,
+	get: ()=>NOTHING,
+	apply: ()=>NOTHING,
+}
 NOTHING = new Proxy(_NOTHING, handler);
 
+// TODO: is a Val object even necessary? why not just use the value itself?
 function Val(x) { 
 	return { 
 		val: x, 
-		valueOf: function() { return this.val; },
-		type: "Val"
+		valueOf: function() { return this.val; },	// TODO: `return x;` makes things flash?
+		type: "Val",
+		get: function(key) { return x[key]; },
+		apply: function() { return x.apply(this, arguments); }
 	};
 }
 function VAL(x) { return new Proxy(Val(x), handler); }
