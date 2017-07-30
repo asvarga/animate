@@ -83,6 +83,7 @@ function Val(x) {
 function VAL(x) { return new Proxy(Val(x), handler); }
 VAL_1 = VAL(1);
 
+// TODO: say self = this.target, and then use self
 function App() { 
 	var args = Array.from(arguments);
 	var pure = !!args[0];
@@ -103,7 +104,13 @@ function App() {
 			}
 			return this.target.cache.val;
 		},
-		type: "App"
+		type: "App",
+		get: function() {
+			// TODO: ?
+		},
+		apply: function() {
+			// TODO: ?
+		},
 	};
 }
 function APP() { return new Proxy(App.apply(null, arguments), handler); }
@@ -122,7 +129,13 @@ function Frame(dt=1500, t0, t1) {
 			}
 			return Math.max(0, (t-this.target.t0)/this.target.dt); 
 		},
-		type: "Frame"
+		type: "Frame",
+		get: function() {
+			// TODO: ?
+		},
+		apply: function() {
+			// TODO: ?
+		},
 	}
 }
 function FRAME() { return new Proxy(Frame.apply(null, arguments), handler); }
@@ -133,39 +146,39 @@ function If(cond, conseq, altern) {
 		cache: {t: null, val: null}, 
 		cond: cond, conseq: conseq, altern: altern,
 		valueOf: function() { 
-			// console.log(this.target);
 			var t = time();
 			if (this.target.cache.t != t) {
 				var c = this.target.cond.valueOf();
 				if (c >= 1) { 
-					// console.log(this.target.conseq);
 					clear(this.target, Val(this.target.conseq));
-					// createjs.Ticker.paused = true;
 					return this.target.valueOf();
 				}
 				if (c <= 0) { 
 					this.target.cache = { t: t, val: this.target.altern.valueOf() };
 					return this.target.cache.val;
 				}
-				// if (!this.target.conseq) {
-				// 	console.log(this.target.valueOf());
-				// }
 				var con = this.target.conseq.valueOf();
 				var alt = this.target.altern.valueOf();
 				if (isNum(con) && isNum(alt)) { 
-					// console.log("work:", this.target);
 					this.target.cache = { t: t, val: c*con + (1-c)*alt };
 					return this.target.cache.val;
 				}
 				return this;
-				// return new Proxy(this.target, handler);
 			}
 			return this.target.cache.val;
 		},
-		type: "If"
+		type: "If",
+		get: function(key) {
+			return IF(	this.cond,
+						maybe(this.conseq[key]),
+						maybe(this.altern[key]));
+		},
+		apply: function() {
+			return IF(	this.cond, 
+						this.conseq.apply(this.conseq, argumentsList),
+						this.altern.apply(this.altern, argumentsList));
+		},
 	}
-	// ret.target = ret;
-	// return ret;
 }
 function IF() { return new Proxy(If.apply(null, arguments), handler); }
 

@@ -91,7 +91,7 @@ CREATE WHOLE INTERPRETED LANGUAGE THAT SELF PRUNES AS IT RUNS
 - solve bidirectional update issue?
 - more types of things
 - APP(js, DUAL(x, y)) should *become* DUAL(APP(f, x), APP(f, y)) once and evaluate that every frame
-
+- add edges to tree in demo
 
 
 
