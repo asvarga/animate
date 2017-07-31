@@ -19,6 +19,7 @@ function tick(evt={}) {
 }
 
 function load() {
+	return;
 	canvas = document.getElementById("myCanvas");
 	stage = new createjs.Stage("myCanvas");
 	stage.enableMouseOver();
@@ -67,6 +68,7 @@ function load() {
 	circle.y = 100;
 	circle.space = 800;
 
+	// createjs.Ticker.paused = true;
 	tick();
 }
 
@@ -91,10 +93,10 @@ class Circle extends createjs.Shape {
 					var newSibs = [].concat(sibs.slice(0, index), 
 											childs, 
 											sibs.slice(index+1));
-					par.childs = LERP(newSibs, par.childs);
+					par.childs = lerp(newSibs, par.childs);
 					for (var i=0; i<newSibs.length; i++) {
-						newSibs[i].index = LERP(i, newSibs[i].index);
-						newSibs[i].par = LERP(par, newSibs[i].par);
+						newSibs[i].index = lerp(i, newSibs[i].index);
+						newSibs[i].par = lerp(par, newSibs[i].par);
 					}
 					stage.removeChild(this);
 				}
@@ -109,13 +111,13 @@ class Circle extends createjs.Shape {
 }
 function choose(x) { 
 	if (CHOSEN) {
-		CHOSEN.scaleX = LERP(1, CHOSEN.scaleX);
-		CHOSEN.scaleY = LERP(1, CHOSEN.scaleY);
+		CHOSEN.scaleX = lerp(1, CHOSEN.scaleX);
+		CHOSEN.scaleY = lerp(1, CHOSEN.scaleY);
 	}
 	if (CHOSEN != x) {
 		CHOSEN = x;
-		CHOSEN.scaleX = LERP(2, CHOSEN.scaleX);
-		CHOSEN.scaleY = LERP(2, CHOSEN.scaleY);
+		CHOSEN.scaleX = lerp(2, CHOSEN.scaleX);
+		CHOSEN.scaleY = lerp(2, CHOSEN.scaleY);
 	} else {
 		CHOSEN = null;
 	}
@@ -124,7 +126,7 @@ function choose(x) {
 }
 
 DUR = 1500;
-function LERP(to, from) {
+function lerp(to, from) {
 	return IF(APP(quint, FRAME(DUR)), to, from);
 }
 

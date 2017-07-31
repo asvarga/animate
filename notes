@@ -81,8 +81,13 @@ CREATE WHOLE INTERPRETED LANGUAGE THAT SELF PRUNES AS IT RUNS
 
 - neaten up
 - rename things and functions
+	- If -> Lerp/Both/Pair/Comb/Super/If
+	- val -> now
+	- Node -> Js
+	- destiny -> ?
 - caching for Nodes
 	- Nodes should be time-pure by definition
+	- caching for all things?
 - make independent of create.js or any other clock thing
 	- default to some vanilla ticker
 - avoid name conflicts (like type property)
