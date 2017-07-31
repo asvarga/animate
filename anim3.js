@@ -10,16 +10,9 @@ var handler = {
 			case "toString": 			// ...
 			case "valueOf":
 				if (target.maker) {
-					if (target.cache) {
-						var t = time();
-						if (target.cache.t != t) {
-							target.cache = {t: t, at: wrap(target.val(target))};
-						}
-						return target.cache.val;
-					}
-					return wrap(target.val(target));
+					return () => _at(target, time());
 				}
-				return target[name];	
+				return () => target[name];	
 			default:
 				if (target.maker) { return wrap(target.get(name)); }
 				return target[name];
@@ -33,15 +26,40 @@ var handler = {
 	}
 }
 
-function at(x, t) 	{ return x.maker ? x.at : x; }
-function now(x) 	{ return at(x, time); }
-function end(x) 	{ return at(x, Infinity); }
+/*
+
+triple check: 
+	- valueOf in handler
+	- _at
+	- at
+	- object's at methods
+
+*/
+
+
+function _at(x, t) { 
+	var cache = x.cache;
+	if (cache) {
+		if (cache.t != t) {
+			cache.t = t;	// note that this prevents infinite loops
+			cache.val = wrap(x.at(x, t));
+		}
+		return cache.val;
+	}
+	return wrap(x.at(x, t));
+}
+function at(x, t) 	{ 
+	var target = x.target;
+	return target ? _at(target, t) : x;
+}
+function now(x) { return at(x, time()); }
+function end(x) { return at(x, Infinity); }
 
 // function destiny(x) {
 // 	if (not(x)) { return x; }
 // 	var target = x.target;
 // 	if (!not(target) && target.maker === "Lerp") { return destiny(target.conseq); }
-// 	return x.valueOf();
+// 	return x.atueOf();
 // }
 
 // TODO: are these both necessary/correct?
@@ -79,21 +97,10 @@ function Just(x) {
 function JUST() { return new Proxy(Just.apply(null, arguments), handler); }
 ZERO = JUST(0); ONE = JUST(1); TWO = JUST(2); THREE = JUST(3); INF = JUST(Infinity);
 
-/*
-
-
-
-REPLACE VALUEOF WITH AT
-
-
-*/
-
-
-
 function Lerp(cond, conseq, altern) { 
 	return {
 		maker: Lerp,
-		cache: {t: null, at: null}, 
+		cache: {t: null, val: null}, 
 		cond: wrap(cond), conseq: wrap(conseq), altern: wrap(altern),
 		at: function(me, t) { 
 			var c = at(me.cond, t);
@@ -132,7 +139,7 @@ function Js() {
 	if (!pure) { args = args.slice(1); }
 	return {
 		maker: Js,
-		pure: pure, cache: pure ? {t: null, at: null} : null,
+		pure: pure, cache: pure ? {t: null, val: null} : null,
 		at: args[0] || noop,
 		get: args[1] || noop,
 		app: args[2] || noop,
@@ -147,14 +154,14 @@ function App() {
 	if (!pure) { args = args.slice(1); }
 	return { 
 		maker: App,
-		pure: pure, cache: pure ? {t: null, at: null} : null,
+		pure: pure, cache: pure ? {t: null, val: null} : null,
 		f: args[0], args: args.slice(1).map(wrap),
 		at: function(me, t) { 
-			var ret = me.f.apply(null, me.args.map(x => x.valueOf()));
+			var ret = me.f.apply(null, me.args.map(x => at(x, t)));
 			if (me.pure && me.args.every(x => x.maker === Just)) {
 				me.become(ret);
 			}
-			return ret.valueOf();
+			return at(ret, t);
 		},
 		get: function(me, key) {
 			// TODO: ?

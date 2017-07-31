@@ -78,6 +78,7 @@ CREATE WHOLE INTERPRETED LANGUAGE THAT SELF PRUNES AS IT RUNS
 
 
 - object orient: put methods objects
+- see if `this` will work where `me` is used
 
 - neaten up
 - rename things and functions
@@ -97,6 +98,7 @@ CREATE WHOLE INTERPRETED LANGUAGE THAT SELF PRUNES AS IT RUNS
 - more types of things
 - APP(js, DUAL(x, y)) should *become* DUAL(APP(f, x), APP(f, y)) once and evaluate that every frame
 - add edges to tree in demo
+
 
 
 
