@@ -15,18 +15,21 @@ function isObj(x) { return x !== null && typeof x === 'object'; }
 function isDef(x) { return typeof x !== 'undefined'; }
 function isNum(x) { return !isNaN(parseFloat(x)) && isFinite(x); }
 
-function clear(obj, obj2) {
-	for (var key in obj) {
-		if (obj.hasOwnProperty(key)) {
-			delete obj[key];
-		}
-	}
+function update(obj, obj2) {
 	for (var key in obj2) {
 		if (obj2.hasOwnProperty(key)) {
 			obj[key] = obj2[key];
 		}
 	}
 	return obj;
+}
+function clear(obj, obj2) {
+	for (var key in obj) {
+		if (obj.hasOwnProperty(key)) {
+			delete obj[key];
+		}
+	}
+	return update(obj, obj2);
 }
 
 function randColor() {

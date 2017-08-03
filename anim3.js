@@ -5,18 +5,18 @@ var handler = {
 	get: function(target, name, receiver) {
 		switch (name) {
 			case "target": 		return target;
-			case "become": 		return function(obj) { clear(target, wrap(obj)); }
+			case "become": 		return function(obj) { return clear(target, obj.target||obj); }
 			case Symbol.toPrimitive: 	// ...
 			case "toString": 			// ...
 			case "valueOf": 	return () => _now(target);
-			default: 			return maybe(target.get(target, name));
+			default: 			return maybe(target.get(name));
+			// default: 			return target.get(name) || receiver;
 		}
 	},
 	apply: function(target, thisArg, argumentsList) {
-		if (target.maker) {
-			return maybe(target.app(target, argumentsList));
-		}
-		return target.apply(target, argumentsList);
+		// console.log(argumentsList);
+		return maybe(target.app(argumentsList));
+		// return target.app(argumentsList) || thisArg;
 	}
 }
 
@@ -26,7 +26,7 @@ function _now(x, t) {
 	if (cache) {
 		if (cache.t != t) {
 			// cache.val = 0;	cache.t = t;	// prevents infinite loops
-			cache.val = x.at(x, t, now);
+			cache.val = x.at(t, now);
 			cache.t = t;
 		}
 		return cache.val;
@@ -34,8 +34,8 @@ function _now(x, t) {
 	return x.at(x, t, now);
 }
 function now(x, t) { return x.target ? _now(x.target, t) : x; }
-function at(x, t) { return x.target ? x.target.at(x.target, t, at) : x; }
-function end(x) { return x.target ? x.target.at(x.target, Infinity, end) : x; }
+function at(x, t) { return x.target ? x.target.at(t, at) : x; }
+function end(x) { return x.target ? x.target.at(Infinity, end) : x; }
 
 function wrap(x) {
 	if (x.maker) { return x; }
@@ -56,19 +56,21 @@ function Nothing() {
 		app: () => NOTHING,
 	}
 }
-NOTHING = new Proxy(Nothing(), handler);
+NOTHING = new Proxy(update(()=>null, Nothing()), handler);
 noop = ()=>NOTHING;
 
 function Just(x) { 
 	return { 
 		maker: Just,
 		x: x, 
-		at: function(me, t, at) { return me.x; },	// TODO: `return x;` makes things flash?
-		get: function(me, key) { return me.x[key]; },
-		app: function(me, args) { return me.x.apply(me.x, args); }
+		at: function(t, at) { return this.x; },	// TODO: `return x;` makes things flash?
+		get: function(key) { return this.x[key]; },
+		app: function(args) { 
+			console.log(this.x);		// TODO: WHAAAAAAAAT????
+			return this.x.apply(this.x, args); }
 	};
 }
-function JUST() { return new Proxy(Just.apply(null, arguments), handler); }
+function JUST() { return new Proxy(update(()=>null, Just.apply(null, arguments)), handler); }
 ZERO = JUST(0); ONE = JUST(1); TWO = JUST(2); THREE = JUST(3); INF = JUST(Infinity);
 
 function Lerp(cond, conseq, altern) { 
@@ -76,36 +78,36 @@ function Lerp(cond, conseq, altern) {
 		maker: Lerp,
 		cache: {t: null, val: null}, 
 		cond: cond, conseq: wrap(conseq), altern: wrap(altern),
-		at: function(me, t, at) { 
-			var c = at(me.cond, t);
+		at: function(t, at) { 
+			var c = at(this.cond, t);
 			if (c >= 1) { 
-				if (c.maker === Just) { me.become(me.conseq); }
-				return at(me.conseq, t);
+				if (c.maker === Just) { this.become(this.conseq); }
+				return at(this.conseq, t);
 			}
 			if (c <= 0) { 
-				if (c.maker === Just) { me.become(me.altern); }
-				return at(me.altern, t);
+				if (c.maker === Just) { this.become(this.altern); }
+				return at(this.altern, t);
 			}
-			var con = at(me.conseq, t);
-			var alt = at(me.altern, t);
+			var con = at(this.conseq, t);
+			var alt = at(this.altern, t);
 			if (isNum(con) && isNum(alt)) { 
 				return c*con + (1-c)*alt;
 			}
-			return me;
+			return new Proxy(this, handler);		// TODO: should be returning the outer proxy, not this
 		},
-		get: function(me, key) {
-			return LERP(me.cond,
-						me.conseq[key],
-						me.altern[key]);
+		get: function(key) {
+			return LERP(this.cond,
+						this.conseq[key],
+						this.altern[key]);
 		},
-		app: function(me, args) {
-			return LERP(me.cond, 
-						me.conseq.apply(me.conseq, args),
-						me.altern.apply(me.altern, args));
+		app: function(args) {
+			return LERP(this.cond, 
+						this.conseq.apply(this.conseq, args),
+						this.altern.apply(this.altern, args));
 		},
 	}
 }
-function LERP() { return new Proxy(Lerp.apply(null, arguments), handler); }
+function LERP() { return new Proxy(update(()=>null, Lerp.apply(null, arguments)), handler); }
 
 function Js() {
 	var args = Array.from(arguments);
@@ -130,23 +132,27 @@ function App() {
 		maker: App,
 		cache: pure ? {t: null, val: null} : null,
 		f: args[0], args: args.slice(1).map(wrap),
-		at: function(me, t, at) { 
-			console.log(me.f);
-			var ret = me.f.apply(null, me.args.map(x => at(x, t)));
-			if (me.cache && me.args.every(x => x.maker === Just)) {
-				me.become(ret);
-			}
-			return at(ret, t);
+		at: function(t, at) { 
+			// console.log(this.f);
+			// console.log(at(this.f, t));
+			// var ret = this.f.apply(at(this.f, t), this.args.map(x => at(x, t)));
+			// var f = at(this.f, t);
+			var ret = this.f.apply(this.f, this.args.map(x => at(x, t)));
+			// if (this.cache && this.args.every(x => x.maker === Just)) {
+			// 	this.become(ret);
+			// }
+			return ret;
+			// return at(ret, t);
 		},
-		get: function(me, key) {
+		get: function(key) {
 			// TODO: ?
 		},
-		app: function(me, args) {
+		app: function(args) {
 			// TODO: ?
 		},
 	};
 }
-function APP() { return new Proxy(App.apply(null, arguments), handler); }
+function APP() { return new Proxy(update(()=>null, App.apply(null, arguments)), handler); }
 
 function Frame(dt=1500, t0, t1) {
 	t0 = t0 || time();
@@ -155,24 +161,24 @@ function Frame(dt=1500, t0, t1) {
 	return {
 		maker: Frame,
 		t0: t0, t1: t1, dt: dt,
-		at: function(me, t, at) { 
+		at: function(t, at) { 
 			var t = time();
-			if (t > me.t1) {
-				me.become(ONE);
+			if (t > this.t1) {
+				this.become(ONE);
 				return 1;
 			}
-			if (t < me.t0) { return 0; }
-			return (t-me.t0)/me.dt; 
+			if (t < this.t0) { return 0; }
+			return (t-this.t0)/this.dt; 
 		},
-		get: function(me, key) {
+		get: function(key) {
 			// TODO: ?
 		},
-		app: function(me, args) {
+		app: function(args) {
 			// TODO: ?
 		},
 	}
 }
-function FRAME() { return new Proxy(Frame.apply(null, arguments), handler); }
+function FRAME() { return new Proxy(update(()=>null, Frame.apply(null, arguments)), handler); }
 
 ////
 
@@ -183,24 +189,26 @@ div 	= (x,y) => x/y;
 id 		= (x) => x;				
 cubic	= (x) => x*x*(3-2*x);					
 quint	= (x) => x*x*x*(6*x*x - 15*x + 10);		
-eq		= (x,y) => x==y;						
+eq		= (x,y) => x==y;					
 
 ////////
 
 // x = APP(x=>x/1000, TIME);
-x = APP(add, TIME, TIME);
+// x = APP(add, TIME, TIME);
+// x = APP(mul, x, x);
 // x.target.args[1] = x
-console.log(x);
 // x = LERP()
 // x = wrap(add);
 // console.log(x(4,5));
 
-// prog = LERP(0.5, 4, 5);
+// x = LERP(0.5, 4, 5);
 // // prog = APP(add, 4, 5);
 // prog2 = APP(mul, prog, prog);
 // console.log(prog2+0);
 
-
+x = APP(LERP(0.5, add, mul), 2, 10);
+console.log(x.valueOf());
+// console.log(LERP(0.5, add, mul)(2, 10)+0);
 
 
 
