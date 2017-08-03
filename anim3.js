@@ -1,76 +1,50 @@
 
-function time() { return createjs.Ticker.getTime(true); }
+function time() { return Math.round(createjs.Ticker.getTime(true)); }
 
 var handler = {
 	get: function(target, name, receiver) {
 		switch (name) {
-			case "target": return target;
-			case "become": return function(obj) { clear(target, wrap(obj)); }
+			case "target": 		return target;
+			case "become": 		return function(obj) { clear(target, wrap(obj)); }
 			case Symbol.toPrimitive: 	// ...
 			case "toString": 			// ...
-			case "valueOf":
-				if (target.maker) {
-					return () => _at(target, time());
-				}
-				return () => target[name];	
-			default:
-				if (target.maker) { return wrap(target.get(name)); }
-				return target[name];
+			case "valueOf": 	return () => _now(target);
+			default: 			return maybe(target.get(target, name));
 		}
 	},
 	apply: function(target, thisArg, argumentsList) {
 		if (target.maker) {
-			return wrap(target.app(target, argumentsList));
+			return maybe(target.app(target, argumentsList));
 		}
 		return target.apply(target, argumentsList);
 	}
 }
 
-/*
-
-triple check: 
-	- valueOf in handler
-	- _at
-	- at
-	- object's at methods
-
-*/
-
-
-function _at(x, t) { 
+function _now(x, t) { 
 	var cache = x.cache;
+	t = t || time();
 	if (cache) {
 		if (cache.t != t) {
-			cache.t = t;	// note that this prevents infinite loops
-			cache.val = wrap(x.at(x, t));
+			// cache.val = 0;	cache.t = t;	// prevents infinite loops
+			cache.val = x.at(x, t, now);
+			cache.t = t;
 		}
 		return cache.val;
 	}
-	return wrap(x.at(x, t));
+	return x.at(x, t, now);
 }
-function at(x, t) 	{ 
-	var target = x.target;
-	return target ? _at(target, t) : x;
-}
-function now(x) { return at(x, time()); }
-function end(x) { return at(x, Infinity); }
+function now(x, t) { return x.target ? _now(x.target, t) : x; }
+function at(x, t) { return x.target ? x.target.at(x.target, t, at) : x; }
+function end(x) { return x.target ? x.target.at(x.target, Infinity, end) : x; }
 
-// function destiny(x) {
-// 	if (not(x)) { return x; }
-// 	var target = x.target;
-// 	if (!not(target) && target.maker === "Lerp") { return destiny(target.conseq); }
-// 	return x.atueOf();
-// }
-
-// TODO: are these both necessary/correct?
 function wrap(x) {
 	if (x.maker) { return x; }
 	if (not(x)) { return NOTHING; }
 	return JUST(x);
 }
-// function maybe(x) {
-// 	return not(x) ? NOTHING : x;
-// }
+function maybe(x) {
+	return not(x) ? NOTHING : x;
+}
 
 ////
 
@@ -89,7 +63,7 @@ function Just(x) {
 	return { 
 		maker: Just,
 		x: x, 
-		at: function(me, t) { return me.x; },	// TODO: `return x;` makes things flash?
+		at: function(me, t, at) { return me.x; },	// TODO: `return x;` makes things flash?
 		get: function(me, key) { return me.x[key]; },
 		app: function(me, args) { return me.x.apply(me.x, args); }
 	};
@@ -101,8 +75,8 @@ function Lerp(cond, conseq, altern) {
 	return {
 		maker: Lerp,
 		cache: {t: null, val: null}, 
-		cond: wrap(cond), conseq: wrap(conseq), altern: wrap(altern),
-		at: function(me, t) { 
+		cond: cond, conseq: wrap(conseq), altern: wrap(altern),
+		at: function(me, t, at) { 
 			var c = at(me.cond, t);
 			if (c >= 1) { 
 				if (c.maker === Just) { me.become(me.conseq); }
@@ -139,14 +113,14 @@ function Js() {
 	if (!pure) { args = args.slice(1); }
 	return {
 		maker: Js,
-		pure: pure, cache: pure ? {t: null, val: null} : null,
+		cache: pure ? {t: null, val: null} : null,
 		at: args[0] || noop,
 		get: args[1] || noop,
 		app: args[2] || noop,
 	};
 }
 function JS() { return new Proxy(Js.apply(null, arguments), handler); }
-TIME = JS(time);
+TIME = JS(false, time);		// caching would waste time...
 
 function App() { 
 	var args = Array.from(arguments);
@@ -154,11 +128,12 @@ function App() {
 	if (!pure) { args = args.slice(1); }
 	return { 
 		maker: App,
-		pure: pure, cache: pure ? {t: null, val: null} : null,
+		cache: pure ? {t: null, val: null} : null,
 		f: args[0], args: args.slice(1).map(wrap),
-		at: function(me, t) { 
+		at: function(me, t, at) { 
+			console.log(me.f);
 			var ret = me.f.apply(null, me.args.map(x => at(x, t)));
-			if (me.pure && me.args.every(x => x.maker === Just)) {
+			if (me.cache && me.args.every(x => x.maker === Just)) {
 				me.become(ret);
 			}
 			return at(ret, t);
@@ -180,7 +155,7 @@ function Frame(dt=1500, t0, t1) {
 	return {
 		maker: Frame,
 		t0: t0, t1: t1, dt: dt,
-		at: function(me, t) { 
+		at: function(me, t, at) { 
 			var t = time();
 			if (t > me.t1) {
 				me.become(ONE);
@@ -211,6 +186,14 @@ quint	= (x) => x*x*x*(6*x*x - 15*x + 10);
 eq		= (x,y) => x==y;						
 
 ////////
+
+// x = APP(x=>x/1000, TIME);
+x = APP(add, TIME, TIME);
+// x.target.args[1] = x
+console.log(x);
+// x = LERP()
+// x = wrap(add);
+// console.log(x(4,5));
 
 // prog = LERP(0.5, 4, 5);
 // // prog = APP(add, 4, 5);

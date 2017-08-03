@@ -19,7 +19,6 @@ function tick(evt={}) {
 }
 
 function load() {
-	return;
 	canvas = document.getElementById("myCanvas");
 	stage = new createjs.Stage("myCanvas");
 	stage.enableMouseOver();
@@ -63,10 +62,10 @@ function load() {
 		if (DOWN[event.keyCode]) { delete DOWN[event.keyCode]; }
 	}
 
-	circle = new Circle();
-	circle.x = 100;
-	circle.y = 100;
-	circle.space = 800;
+	// circle = new Circle();
+	// circle.x = 100;
+	// circle.y = 100;
+	// circle.space = 800;
 
 	// createjs.Ticker.paused = true;
 	tick();
